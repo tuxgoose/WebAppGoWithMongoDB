@@ -1,9 +1,9 @@
 
 package datastructure
 
-import {
+import (
     "time"
-}
+)
 
 type Content struct {
     Author string
