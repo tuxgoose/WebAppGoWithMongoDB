@@ -5,9 +5,9 @@ import (
     "time"
 )
 
-type Content struct {
+type Post struct {
     Author string
     Title string
-    Post string
+    Content string
     DateTime time.Time
 }
