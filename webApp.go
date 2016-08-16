@@ -47,7 +47,7 @@ func Home(w http.ResponseWriter, req *http.Request) {
     post := dbutil.Find(c, bson.M{"title": "MySecondPost"})
     //posts := dbutil.FindAll(c)
 
-    /*for _, x := range posts {
+    /*for _, x := range result {
         fmt.Println("############################################")
         fmt.Println("Name:",    x.Name)
         fmt.Println("Surname:", x.Surname)
@@ -70,9 +70,9 @@ func Edit(w http.ResponseWriter, req *http.Request) {
         render(w, "edit", context)
     } else {
         p := datastructure.Post{req.FormValue("author"),
-                                   req.FormValue("title"),
-                                   req.FormValue("content"),
-                                   time.Now().UTC()}
+                                req.FormValue("title"),
+                                req.FormValue("content"),
+                                time.Now().UTC()}
         if p.Author != "" && p.Title != "" && p.Content != "" {
             dbutil.Insert(c, p)
             http.Redirect(w, req, "/"+req.FormValue("title"), http.StatusFound)
