@@ -10,6 +10,7 @@ import (
     "log"
     "io"
     "time"
+    "strings"
   	"net/http"
     "html/template"
     "gopkg.in/mgo.v2"
@@ -24,58 +25,56 @@ const STATIC_ROOT string = "static/"
 var c * mgo.Collection = nil
 
 type Context struct {
-    Author string
-    Title string
-    Content string
-    DateTime time.Time
+    Posts []datastructure.Post
     Static string
 }
 
 func Home(w http.ResponseWriter, req *http.Request) {
-    title := req.URL.Path[len("/"):]
+    // Load all posts
+    posts := dbutil.FindAll(c)
+
+    var content Context
+    for _, x := range posts {
+        context := datastructure.Post{Author: x.Author,
+                                      Title: x.Title,
+                                      Content: x.Content[0:100]+"...",
+                                      DateTime: x.DateTime}
+        content.Posts = append(content.Posts, context)
+    }
+
+    render(w, "index", content)
+}
+
+func View(w http.ResponseWriter, req *http.Request) {
+    title := req.URL.Path[len("/view/"):]
     if req.Method == "GET" && title != "" {
         post := dbutil.Find(c, bson.M{"title": title})
-
-        context := Context{Author: post.Author,
-                           Title: post.Title,
-                           Content: post.Content,
-                           DateTime: post.DateTime}
-        render(w, "index", context)
+        var content Context
+        context := datastructure.Post{Author: post.Author,
+                                      Title: post.Title,
+                                      Content: post.Content,
+                                      DateTime: post.DateTime}
+        content.Posts = append(content.Posts, context)
+        render(w, "view", content)
         return
     }
-    // Load all posts
-    post := dbutil.Find(c, bson.M{"title": "MySecondPost"})
-    //posts := dbutil.FindAll(c)
-
-    /*for _, x := range result {
-        fmt.Println("############################################")
-        fmt.Println("Name:",    x.Name)
-        fmt.Println("Surname:", x.Surname)
-        fmt.Println("Address:", x.Address)
-        fmt.Println("Phone:",   x.Phone)
-        fmt.Println("############################################")
-        fmt.Println("")
-    }*/
-
-    context := Context{Author: post.Author,
-                       Title: post.Title,
-                       Content: post.Content,
-                       DateTime: post.DateTime}
-    render(w, "index", context)
+    http.Redirect(w, req, "/", http.StatusFound)
 }
 
 func Edit(w http.ResponseWriter, req *http.Request) {
     if req.Method == "GET" {
-        context := Context{}
-        render(w, "edit", context)
+        var content Context
+        context := datastructure.Post{Title: ""}
+        content.Posts = append(content.Posts, context)
+        render(w, "edit", content)
     } else {
         p := datastructure.Post{req.FormValue("author"),
                                 req.FormValue("title"),
-                                req.FormValue("content"),
+                                strings.Replace(req.FormValue("content"), "\n", "\n", -1),
                                 time.Now().UTC()}
         if p.Author != "" && p.Title != "" && p.Content != "" {
             dbutil.Insert(c, p)
-            http.Redirect(w, req, "/"+req.FormValue("title"), http.StatusFound)
+            http.Redirect(w, req, "/view/"+req.FormValue("title"), http.StatusFound)
         }
     }
 }
@@ -117,6 +116,7 @@ func main() {
 
     http.HandleFunc("/", Home)
     http.HandleFunc("/edit/", Edit)
+    http.HandleFunc("/view/", View)
     http.HandleFunc(STATIC_URL, StaticHandler)
 
     err := http.ListenAndServe(":8080", nil)
