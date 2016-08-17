@@ -11,7 +11,7 @@ import (
     "io"
     "time"
     "strings"
-  	"net/http"
+    "net/http"
     "html/template"
     "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
@@ -37,7 +37,7 @@ func Home(w http.ResponseWriter, req *http.Request) {
     for _, x := range posts {
         context := datastructure.Post{Author: x.Author,
                                       Title: x.Title,
-                                      Content: x.Content[0:100]+"...",
+                                      Content: x.Content[0:100] + "...",
                                       DateTime: x.DateTime}
         content.Posts = append(content.Posts, context)
     }
@@ -70,7 +70,7 @@ func Edit(w http.ResponseWriter, req *http.Request) {
     } else {
         p := datastructure.Post{req.FormValue("author"),
                                 req.FormValue("title"),
-                                strings.Replace(req.FormValue("content"), "\n", "\n", -1),
+                                eq.FormValue("content"),
                                 time.Now().UTC()}
         if p.Author != "" && p.Title != "" && p.Content != "" {
             dbutil.Insert(c, p)
