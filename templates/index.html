@@ -1,7 +1,13 @@
 {{ define "content" }}
-    <div class="page-header">
-        <h1>{{ .Title }}</h1>
+    <div class="list-group">
+        {{range $_, $post := .Posts}}
+            <a href="/view/{{$post.Title}}" class="list-group-item">
+                <h4 class="list-group-item-heading">{{$post.Title}}</h4>
+                <p class="list-group-item-text">{{$post.Content}}</p>
+                <div align="right">
+                    <p class="list-group-item-text">{{$post.Author}}</p>
+                </div>
+            </a>
+        {{end}}
     </div>
-    <p>{{ .Content }}</p>
-    <div align="right">{{ .Author }}</div>
 {{ end }}
